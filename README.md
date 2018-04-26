@@ -1,6 +1,6 @@
 # convex-hull-sim
 #### A web-based sim for finding the convex hull of a plot of points
-*Latest release: v1.0*
+*Latest release: v1.1*
 
 With this app you can create simple plots of points on a grid and determine the convex hull of those points. Once found, you can prune the points not on the hull.
 
