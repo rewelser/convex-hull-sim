@@ -69,6 +69,14 @@
 
 // If everything is moving, we're moving, not everything. Otherwise, something is moving.
 
+
+//another note: our ability to recognize the subject of one focus as several different objects
+//(think side of monitor: bezel, line, margin, color & texture notwithstanding)
+
+// Note: invariant object representation = 4D plot of object in motion = "identity manifold"
+// https://www.youtube.com/watch?v=AYIf3iBmIjg
+// "Ventral Stream"
+
 /*
 notes:
 
@@ -98,6 +106,9 @@ var env = new Object();
     // fields used with standard deviation
     env.stddev = 0;
 
+    // fields used in scanning
+    env.scan_pairs = [];
+
 
     env.instantiate = function() {
         for (var i = 0; i < env.height; i++) {
@@ -118,10 +129,6 @@ var env = new Object();
     env.inst_point = function($this) {
         $this.addClass("point");
         env.inst_distinct_pairs($this);
-//        env.inst_lowXY($this);
-        // env.lowXY_pairs = env.pairs_with_point(env.lowXY);
-        // env.angle_selection_sort();
-        // env.convex_hull();
     };
 
     env.inst_lowXY = function($this, deleted) {
@@ -163,22 +170,6 @@ var env = new Object();
         }
     };
 
-    env.delete_point = function($point) {
-        $point.removeClass("point hull current");
-        if (env.lowXY.is($point)) {
-            env.lowXY = "";
-        }
-        
-        var to_remove = env.pairs_with_point($point);
-        for (var i = 0; i < to_remove.length; i++) {
-            if (env.pairs.includes(to_remove[i])) {
-                env.pairs.splice(env.pairs.indexOf(to_remove[i]), 1);
-            }
-        }
-        
-        env.inst_lowXY($point, true);
-    };
-
     env.inst_distinct_pairs = function($new_point) {
         env.inst_lowXY($new_point, false);
         
@@ -203,6 +194,22 @@ var env = new Object();
         return common_pairs_arr;
     };
 
+    env.delete_point = function($point) {
+        $point.removeClass("point hull current");
+        if (env.lowXY.is($point)) {
+            env.lowXY = "";
+        }
+        
+        var to_remove = env.pairs_with_point($point);
+        for (var i = 0; i < to_remove.length; i++) {
+            if (env.pairs.includes(to_remove[i])) {
+                env.pairs.splice(env.pairs.indexOf(to_remove[i]), 1);
+            }
+        }
+        
+        env.inst_lowXY($point, true);
+    };
+
     env.angle_selection_sort = function() {
         env.angle_arr = [];
         var common = env.pairs_with_point(env.lowXY);
@@ -215,14 +222,6 @@ var env = new Object();
                 }
             }
         }
-        /// printing
-        var text = "";
-        for (var i = 0; i < common.length; i++) {
-            console.log(common[i].not_lowXY);
-            text += $(common[i].not_lowXY).attr("id") + "\n";
-        }
-    //    console.log(text);
-        ///
 
         for (var i = 0; i < common.length; i++) {
             if ($(common[i]._a).is(env.lowXY)) {
@@ -246,17 +245,6 @@ var env = new Object();
         }
     };
 
-function temp_push(arr, $thing) {
-    arr.push($thing);
-    $($thing).addClass("hull");
-}function temp_pop(arr) {
-    $(".hull").removeClass("hull");
-    arr.pop();
-    for (var i = 0; i < arr.length; i++) {
-        $(arr[i]).addClass("hull");
-    }
-}
-
     env.convex_hull = function() {
         $(".hull").removeClass("hull");
         var hull = [];
@@ -267,34 +255,22 @@ function temp_push(arr, $thing) {
             }
             points.push(env.lowXY[0]);
             points = points.reverse();
-//            hull.push(points[0]);
-//            hull.push(points[1]);
-            
-            temp_push(hull, points[0]);
-//            temp_push(hull, points[1]);
-            
+            cvh_push(hull, points[0]);
             for (var i = 0; i < points.length; i++) {
-                
                 $(".current").removeClass("current");
                 $(points[i]).addClass("current");
-                
                 if (points.length >= 3 && i >= 1) {
                     if (env.ccw($(hull[hull.length-2]), $(hull[hull.length-1]), $(points[i])) > 0) {
-//                        hull.push(points[i]);
-                        temp_push(hull, points[i]);
+                        cvh_push(hull, points[i]);
                     } else {
                         var ccw0 = 2;
                         var ccw1 = 1;
                         var collinear_arr = [];
                         while (hull.length >= 2 && env.ccw($(hull[hull.length-ccw0]), $(hull[hull.length-ccw1]), $(points[i])) <= 0) {
-//                            hull.pop();
-//                            temp_pop(hull);
-                            
-                            /////
                             if ( env.ccw($(hull[hull.length-ccw0]), $(hull[hull.length-ccw1]), $(points[i])) < 0 ) {
-                                temp_pop(hull);
+                                cvh_pop(hull);
                                 for (var j = 0; j < collinear_arr.length; j++) {
-                                    temp_pop(hull);
+                                    cvh_pop(hull);
                                 }
                                 ccw0 = 2;
                                 ccw1 = 1;
@@ -303,25 +279,31 @@ function temp_push(arr, $thing) {
                                 ccw0++;
                                 ccw1++;
                             }
-                            /////
-                            
                         }
-//                        hull.push(points[i]);
-                        temp_push(hull, points[i]);
+                        cvh_push(hull, points[i]);
                     }
                 }
             }
-//            for (var i = 0; i < hull.length; i++) { console.log(i);
-//                $(hull[i]).addClass("hull");
-//            }
             env.hull = hull;
             return env.hull;
         }
     };
 
-    env.ccw = function($p1, $p2, $p3) {
-        return (($p2.data("x") - $p1.data("x"))*($p3.data("y") - $p1.data("y")) - ($p2.data("y") - $p1.data("y"))*($p3.data("x") - $p1.data("x")));
-    };
+        env.ccw = function($p1, $p2, $p3) {
+            return (($p2.data("x") - $p1.data("x"))*($p3.data("y") - $p1.data("y")) - ($p2.data("y") - $p1.data("y"))*($p3.data("x") - $p1.data("x")));
+        };
+
+        function cvh_push(arr, $thing) {
+            arr.push($thing);
+            $($thing).addClass("hull");
+        }
+        function cvh_pop(arr) {
+            $(".hull").removeClass("hull");
+            arr.pop();
+            for (var i = 0; i < arr.length; i++) {
+                $(arr[i]).addClass("hull");
+            }
+        }
 
     // Gaussian Blur 2D - G(x, y) = 1/(2 * pi * sigma^2)*e^((-x^2 + y^2)/2 * sigma^2)
     env.gb = function() {
@@ -456,13 +438,110 @@ function temp_push(arr, $thing) {
         return dist;
     };
 
-env.pairs_log = function() {
-    for (var i = 0; i < env.pairs.length; i++) {
-        console.log(env.pairs[i]._a);
-        console.log(env.pairs[i]._b);
-        console.log("--------");
-    }
-};
+    env.pairs_log = function() {
+        for (var i = 0; i < env.pairs.length; i++) {
+            console.log(env.pairs[i]._a);
+            console.log(env.pairs[i]._b);
+            console.log("--------");
+        }
+    };
+
+    env.avg_slopes = function() {
+        var avg = 0;
+        for (var i = 0; i < env.pairs.length; i++) {
+            if (isFinite(env.pairs[i].__slope) && !isNaN(env.pairs[i].__slope)) {
+                avg += Math.abs(env.pairs[i].__slope);
+            }
+        }
+        avg /= env.pairs.length;
+        return Math.round(avg * 100) / 100;
+    };
+
+    env.pre_scan = function() {
+        $(".pair-results").empty();
+        $(".matrix").empty();
+        env.scan_pairs = [];
+    };
+
+    env.horiz_scan = function() {
+        $("tr").each(function() {
+            if ($(this).find(".point").length > 0) {
+                var pair = new Pair($(this).find(".point").first(), $(this).find(".point").last());
+                env.scan_pairs.push(pair);
+                pair.log("horizontal");
+            }
+        });
+    };
+
+    env.vert_scan = function() {
+        $("tr").eq(0).find("td").each(function() {
+            var id_num = parseInt($(this).attr("id").match(/[0-9].*/g));
+            var first = "";
+            var last = "";
+            for (var i = 0; i < env.height; i++) {
+                
+                id_num += env.height;
+                var id = "#x_" + id_num + ".point";
+                if ($(id).length > 0) {
+                    if (first == "") {first = $(id);}
+                    last = $(id);
+                }
+
+            }
+            if (first != "") {
+                var pair = new Pair(first, last);
+                env.scan_pairs.push(pair);
+                pair.log("vertical");
+            }
+        });
+    };
+
+    env.post_scan = function() {
+        var l = $(".pair").length;
+        var row_length = l;
+        var j = 0;
+        var $tr = $("<tr></tr>");
+        
+        // check if prime
+        for(var i = 2; i < l; i++) {
+            if (l % i === 0) {
+                row_length = i;
+                console.log(row_length);
+            }
+        }
+        for (var i = 0; i < l; i++) {
+            var $td = $("<td></td>");
+            var dist = Math.abs(env.scan_pairs[i].__dist);
+            var $parent = $("#pair_" + i);
+            var this_class = "";
+            
+            if ($parent.hasClass("horizontal")) {
+                this_class = "horiz";
+            } else {
+                this_class = "vert";
+            }
+            
+            var $span = $("<span class=\"" + this_class + "\">" + dist + "</span>");
+            $span.data("parent", $parent);
+            
+            $td.append($span);
+            $tr.append($td);
+            $parent.data("child", $span);
+
+            
+            j++;
+            if (j === row_length) {
+                $(".matrix").append($tr);
+                $tr = $("<tr></tr>");
+                j = 0;
+            }
+        }
+        
+        $(".matrix").removeClass("hide");
+        $(".fake-matrix").addClass("hide");
+        $(".matrix-btns").removeClass("inactive");
+
+    };
 
 //// Pairs Constructor
 
@@ -472,8 +551,8 @@ function Pair($a, $b) {
     
     this.equal = function(pair) {
         try {
-            if ( ($(this._a).is($(pair._a)) && $(this._b).is($(pair._b))) ||
-                ($(this._a).is($(pair._b)) && $(this._b).is($(pair._a))) ) {
+            if (($(this._a).is($(pair._a)) && $(this._b).is($(pair._b))) ||
+                ($(this._a).is($(pair._b)) && $(this._b).is($(pair._a)))) {
                 return true;
             } else {
                 return false;
@@ -581,11 +660,20 @@ function Pair($a, $b) {
         }
     })(this._a, this._b);
     
-    this.log = function() {
-        console.log(this._a);
-        console.log(this._b);
-        console.log("------")
+    this.log = function(str) {
+        var a_id = $(this._a).attr("id");
+        var b_id = $(this._b).attr("id");
+        var text = "{" + a_id + "}, " + "{" + b_id + "}";
+        var id = "pair_" + $(".pair").length;
+        if (str == "horizontal") {
+            var span = "<span id=\""+id+"\" class=\"pair horizontal\">" + text + "</span>";
+        } else if (str == "vertical") {
+            var span = "<span id=\""+id+"\" class=\"pair vertical\">" + text + "</span>";
+        }
+        span = $(span).data({a_id: a_id, b_id: b_id});
+        $(".pair-results").append(span);
     };
+    
 }
 
 //// Window.onload
@@ -595,10 +683,54 @@ var ddd = "";
 $(window).on("load", function() {
     env.instantiate();
     $(".sqmeter").click(function() {
-        env.inst_point($(this));
+        if (!$(this).hasClass("point")) {
+            env.inst_point($(this));
+        } else {
+            env.delete_point($(this));
+        }
     });
     
-    $(".sqmeter").mouseenter(function(e) { $("#hover-slope").empty();
+    $(".pair-results").on("mouseenter", ".pair.horizontal", function() {
+        $(this).data("child").addClass("hover");
+        $(this).addClass("hover");
+        var a_id = $(this).data("a_id");
+        var b_id = $(this).data("b_id");
+        $("#universe").find("#" + a_id).addClass("pair_highlight horizontal");
+        $("#universe").find("#" + b_id).addClass("pair_highlight horizontal");
+    }).on("mouseleave", ".pair", function() {
+        $(this).data("child").removeClass("hover");
+        $(this).removeClass("hover");
+        var a_id = $(this).data("a_id");
+        var b_id = $(this).data("b_id");
+        $("#universe").find("#" + a_id).removeClass("pair_highlight horizontal");
+        $("#universe").find("#" + b_id).removeClass("pair_highlight horizontal");
+    });
+    
+    $(".pair-results").on("mouseenter", ".pair.vertical", function() {
+        $(this).data("child").addClass("hover");
+        $(this).addClass("hover");
+        var a_id = $(this).data("a_id");
+        var b_id = $(this).data("b_id");
+        $("#universe").find("#" + a_id).addClass("pair_highlight vertical");
+        $("#universe").find("#" + b_id).addClass("pair_highlight vertical");
+    }).on("mouseleave", ".pair", function() {
+        $(this).data("child").removeClass("hover");
+        $(this).removeClass("hover");
+        var a_id = $(this).data("a_id");
+        var b_id = $(this).data("b_id");
+        $("#universe").find("#" + a_id).removeClass("pair_highlight vertical");
+        $("#universe").find("#" + b_id).removeClass("pair_highlight vertical");
+    });
+    
+    $(".matrix").on("mouseenter", "span", function() {
+        $(this).data("parent").mouseenter();
+    }).on("mouseleave", "span", function() {
+        $(this).data("parent").mouseleave();
+    });
+
+    
+    $(".sqmeter").mouseenter(function(e) {
+        $("#hover-slope").empty();
         if ($(this).hasClass("point")) { console.log("point hover");
             for (var i = 0; i < env.lowXY_pairs.length; i++) {
                 if (env.lowXY_pairs[i].has_point($(this))) {
@@ -627,7 +759,58 @@ $(window).on("load", function() {
             $("#hover-slope").removeClass("shown");
         }
     });
+    
+    $("#convex_hull_btn").click(function() {
+        env.lowXY_pairs = env.pairs_with_point(env.lowXY);
+        env.angle_selection_sort();
+        env.convex_hull();
+    });
+        
+    $("#prune_points_btn").click(function() {
+        env.prune_points();
+    });
+    
+    $("#blur_reduce_btn").click(function() {
+        env.gb();
+    });
 
+    $("#avg_slopes_btn").click(function() {
+        $(".num-results").text(env.avg_slopes());
+    });
+    
+    $("#contour_scan_btn").click(function() {
+        env.pre_scan();
+        env.horiz_scan();
+        env.vert_scan();
+        env.post_scan();
+    });
+    
+    $("#copy-csv-btn").click(function() {
+        var text = "";
+        $(".matrix span").each(function() {
+            if (!$(this).is($(".matrix span").eq($(".matrix span").length -1))) {
+                text += $(this).text() + ", ";
+            } else {
+                text += $(this).text();
+            }
+        });
+        $("#hidden-input").attr("value", text);
+        $("#hidden-input")[0].select();
+        document.execCommand("Copy");
+
+});
+    
+    // square small
+    $("#clear_btn").click(function() {
+        env.pre_scan();
+        $(".matrix").addClass("hide");
+        $(".fake-matrix").removeClass("hide");
+        $(".matrix-btns").addClass("inactive");
+        $(".point").each(function() {
+            env.delete_point($(this));
+        });
+    });
+    
     // Prelim. hull testing
 //    $("#x_731").click();
 //    $("#x_648").click();
@@ -653,96 +836,117 @@ $(window).on("load", function() {
 //    $("#x_557").click();
 //    $("#x_371").click();
     
-    // square
-//    $("#x_493").click();
-//    $("#x_494").click();
-//    $("#x_495").click();
-//    $("#x_523").click();
-//    $("#x_525").click();
-//    $("#x_553").click();
-//    $("#x_554").click();
-//    $("#x_555").click();
+    // square small
+    $("#square_small_btn").click(function() {
+        env.pre_scan();
+        $(".matrix").addClass("hide");
+        $(".fake-matrix").removeClass("hide");
+        $(".matrix-btns").addClass("inactive");
+        $(".point").each(function() {
+            env.delete_point($(this));
+        });
+        $("#x_493").click();
+        $("#x_494").click();
+        $("#x_495").click();
+        $("#x_523").click();
+        $("#x_525").click();
+        $("#x_553").click();
+        $("#x_554").click();
+        $("#x_555").click();
+    });
     
-    // triangle
-//    $("#x_346").click();
-//    $("#x_376").click();
-//    $("#x_406").click();
-//    $("#x_436").click();
-//    $("#x_466").click();
-//    $("#x_496").click();
-//    $("#x_526").click();
-//    $("#x_556").click();
-//    $("#x_586").click();
-//    $("#x_316").click();
-//    $("#x_347").click();
-//    $("#x_378").click();
-//    $("#x_409").click();
-//    $("#x_440").click();
-//    $("#x_500").click();
-//    $("#x_558").click();
-//    $("#x_471").click();
-//    $("#x_587").click();
-//    $("#x_529").click();
-//    $("#x_616").click();
+    // triangle east
+    $("#triangle_east_btn").click(function() {
+        env.pre_scan();
+        $(".matrix").addClass("hide");
+        $(".fake-matrix").removeClass("hide");
+        $(".matrix-btns").addClass("inactive");
+        $(".point").each(function() {
+            env.delete_point($(this));
+        });
+        $("#x_346").click();
+        $("#x_376").click();
+        $("#x_406").click();
+        $("#x_436").click();
+        $("#x_466").click();
+        $("#x_496").click();
+        $("#x_526").click();
+        $("#x_556").click();
+        $("#x_586").click();
+        $("#x_316").click();
+        $("#x_347").click();
+        $("#x_378").click();
+        $("#x_409").click();
+        $("#x_440").click();
+        $("#x_500").click();
+        $("#x_558").click();
+        $("#x_471").click();
+        $("#x_587").click();
+        $("#x_529").click();
+        $("#x_616").click();
+    });
     
-    // other triangle
-//    $("#x_371").click();
-//    $("#x_342").click();
-//    $("#x_429").click();
-//    $("#x_458").click();
-//    $("#x_487").click();
-//    $("#x_400").click();
-//    $("#x_373").click();
-//    $("#x_404").click();
-//    $("#x_435").click();
-//    $("#x_466").click();
-//    $("#x_497").click();
-//    $("#x_528").click();
-//    $("#x_527").click();
-//    $("#x_526").click();
-//    $("#x_525").click();
-//    $("#x_524").click();
-//    $("#x_523").click();
-//    $("#x_522").click();
-//    $("#x_521").click();
-//    $("#x_520").click();
-//    $("#x_519").click();
-//    $("#x_518").click();
-//    $("#x_517").click();
-//    $("#x_516").click();
+    // triangle north
+    $("#triangle_north_btn").click(function() {
+        env.pre_scan();
+        $(".matrix").addClass("hide");
+        $(".fake-matrix").removeClass("hide");
+        $(".matrix-btns").addClass("inactive");
+        $(".point").each(function() {
+            env.delete_point($(this));
+        });
+        $("#x_371").click();
+        $("#x_342").click();
+        $("#x_429").click();
+        $("#x_458").click();
+        $("#x_487").click();
+        $("#x_400").click();
+        $("#x_373").click();
+        $("#x_404").click();
+        $("#x_435").click();
+        $("#x_466").click();
+        $("#x_497").click();
+        $("#x_528").click();
+        $("#x_527").click();
+        $("#x_526").click();
+        $("#x_525").click();
+        $("#x_524").click();
+        $("#x_523").click();
+        $("#x_522").click();
+        $("#x_521").click();
+        $("#x_520").click();
+        $("#x_519").click();
+        $("#x_518").click();
+        $("#x_517").click();
+        $("#x_516").click();
+    });
     
     // northeast diagonal
-//    $("#x_616").click();
-//    $("#x_587").click();
-//    $("#x_558").click();
-//    $("#x_529").click();
-//    $("#x_500").click();
-//    $("#x_471").click();
+    $("#ne_diag_btn").click(function() {
+        env.pre_scan();
+        $(".matrix").addClass("hide");
+        $(".fake-matrix").removeClass("hide");
+        $(".matrix-btns").addClass("inactive");
+        $(".point").each(function() {
+            env.delete_point($(this));
+        });
+        $("#x_616").click();
+        $("#x_587").click();
+        $("#x_558").click();
+        $("#x_529").click();
+        $("#x_500").click();
+        $("#x_471").click();
+    });
+
     
     // test of initial if-loop
-    $("#x_551").click();
-    $("#x_251").click();
-    $("#x_320").click();
-    $("#x_561").click();
-    $("#x_708").click();
-    
-    $("#convex_hull_btn").click(function() {
-        env.lowXY_pairs = env.pairs_with_point(env.lowXY);
-        env.angle_selection_sort();
-        env.convex_hull();
-    });
-        
-    $("#prune_points_btn").click(function() {
-        env.prune_points();
-    });
-    
-    $("#blur_reduce_btn").click(function() {
-        env.gb();
-    });
+//    $("#x_551").click();
+//    $("#x_251").click();
+//    $("#x_320").click();
+//    $("#x_561").click();
+//    $("#x_708").click();
     
 });
-
-
 
 // RETIRED FUNCTIONS
 //

@@ -10,15 +10,93 @@
 	</head>
 	
 	<body>
-        <span id="hover-slope"></span>
-        <div id="universe-container">
-            <div id="actions-container">
-                <button id="convex_hull_btn">convex hull</button>
-                <button id="prune_points_btn">prune cluster</button>
-                <button id="blur_reduce_btn">blur reduce</button>
+        <main>
+            <div id="overall-container">
+                <div id="container-fr">
+                    <span id="hover-slope"></span>
+                    <div id="actions-container">
+                        <div class="actions-btns">
+                            <button id="convex_hull_btn">convex hull</button>
+                            <button id="prune_points_btn">prune cluster</button>
+                            <button id="blur_reduce_btn">blur reduce</button>
+                            <button id="avg_slopes_btn">avg slope</button>
+                            <button id="contour_scan_btn">contour scan</button>
+                        </div>
+                        <div class="shapes-btns">
+                            <button id="clear_btn">clear</button>
+                            <button id="square_small_btn">square - small</button>
+                            <button id="triangle_north_btn">triangle - north</button>
+                            <button id="triangle_east_btn">triangle - east</button>
+                            <button id="ne_diag_btn">diag - NE</button>
+                        </div>
+                    </div>
+                    <div id="universe-container">
+                        <table id="universe" CELLSPACING=0></table>
+                    </div>
+                    <div id="results-container">
+                        <span class="num-results"></span>
+                        <span class="pair-results"></span>
+                    </div>
+
+                </div>
+                <div id="container-sr">
+                    <div id="matrix-container">
+                        <div class="matrices">
+                            <div class="matrix-btns inactive">
+                                <button id="copy-csv-btn">copy as CSV</button>
+                                <input type="text" value="" id="hidden-input" tabindex="-1">
+                            </div>
+                            <table class="matrix hide" cellspacing="0">
+                                <tr>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                </tr>
+                            </table>
+
+                            <table class="fake-matrix" cellspacing="0">
+                                <tr>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                    <td><span></span></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <table id="universe" CELLSPACING=0></table>
-        </div>
+        </main>
     </body>
 </html>

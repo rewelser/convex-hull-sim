@@ -1,12 +1,59 @@
-body {background-color: dimgray;}
+body {background-color: dimgray; margin: 0;}
 input, button, submit {border: none;}
 
+#overall-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* width */
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.3);
+    transition: background-color 5s ease;
+    
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0,0,0,0.4);
+    
+}
+
+::-webkit-scrollbar-corner {
+  background: rgba(0,0,0,0);
+}
+
+#container-fr {
+    display: flex;
+    justify-content: space-between;
+    flex-grow: 2;
+    max-height: 60vh;}
+
+#container-sr {
+    display: flex;
+    justify-content: space-between;
+    flex-grow: 1;}
+
 #universe-container {
-    position: absolute;
-    display: inline-block; display: flex;
+    position: relative;
+    display: flex;
+    align-items: center;
+/*
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+*/
 }
 #universe {
 
@@ -26,16 +73,12 @@ input, button, submit {border: none;}
 
 .target {background-color: orangered;}
 .point {background-color: rgba(0,0,0,0.5);}
-.sqmeter:hover {background-color: violet !important;}
-.overlay {
-    height: 100%;
-    width: 100%;
-    background-color: rgba(0,200,0,0.5);}
+.sqmeter:hover {background-color: violet;}
 
 .point.within-avg {background-color: green;}
 
-.point.hull {background-color: deeppink !important;}
-.point.current {background-color: royalblue;}
+.point.hull {background-color: deeppink;}
+.point.current:not(.hull) {background-color: royalblue;}
 
 #hover-slope {
     position: absolute; z-index: 4;
@@ -47,33 +90,159 @@ input, button, submit {border: none;}
     font-family: "Open Sans";}
 #hover-slope.shown {display: initial;}
 
-#actions-container {
+#actions-container, #results-container {
+    position: relative;
     display: inline-flex;
     flex-direction: column;
     padding: 5px;
-    font-size: 24;
     border-right: 1px solid #9e9e9e;
     background-color: ghostwhite;}
-    #actions-container button {
+    #actions-container {left: 0;}
+    #results-container {right: 0;}
+
+        .actions-btns, .shapes-btns {
+            display: inline-flex;
+            flex-direction: column;
+            padding-left: 15px;
+            padding-right: 15px;
+            border: 1px solid rgba(0,0,0,0.2);
+            background-color: rgba(0,0,0,0.1);}
+        .shapes-btns {margin-top: 5px;}
+            .actions-btns button:first-child,
+            .shapes-btns button:first-child {margin-top: 5px;}
+            .actions-btns button,
+            .shapes-btns button,
+            .matrix-btns button {
+                margin-bottom: 5px;
+                padding: 5px;
+                padding-left: 15px;
+                padding-right: 15px;
+                cursor: pointer;
+                color: white;
+                font-family: "Open Sans";
+                font-size: inherit;
+                white-space: nowrap;
+                background-clip: padding-box;
+                transition: background-color .1s ease;}
+                .actions-btns button:focus,
+                .shapes-btns button:focus,
+                .matrix-btns button:focus {outline: none}
+
+                .actions-btns button {background-color: #2196F3;}
+                .actions-btns button:hover {background-color: #03A9F4;}
+                .actions-btns button:active {background-color: #007fb9;}
+
+                .shapes-btns button {background-color: mediumpurple;}
+                .shapes-btns button:hover {background-color: #a377fd;}
+                .shapes-btns button:active {background-color: #7d5fbc;}
+                #clear_btn {background-color: crimson;}
+                #clear_btn:hover {background-color: #fa375e;}
+                #clear_btn:active {background-color: #c1072d;}
+
+                .matrix-btns.inactive button {
+                    pointer-events: none;
+                    opacity: .5;}
+                .matrix-btns button {background-color: deepskyblue;}
+                .matrix-btns button:hover {background-color: #03A9F4;}
+                .matrix-btns button:active {background-color: #007fb9;}
+                input#hidden-input {position: absolute; width: 1px; height: 1px; opacity: 0;}
+
+    .num-results, .pair-results {
         margin-bottom: 5px;
         padding: 5px;
         padding-left: 15px;
         padding-right: 15px;
-        cursor: pointer;
-        color: white;
         font-family: "Open Sans";
-        font-size: inherit;
-        background-color: #2196F3;
-        border: 1px solid ghostwhite;
-        background-clip: padding-box;
-        transition: background-color .1s ease;}
-        #actions-container button:hover {background-color: #03A9F4;}
-        #actions-container button:active {background-color: #007fb9;}
-        #actions-container button:focus {outline: none}
+        border: 1px solid rgba(0,0,0,0.2);
+        background-color: rgba(0,0,0,0.1);}
+        .pair-results {
+            height: 100%;
+            min-width: 130.75px;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-bottom: 0;
+            overflow-y: scroll;}
+            .pair-results .pair:first-child {margin-top: 5px;}
+            .pair-results .pair {
+                display: block;
+                margin-bottom: 5px;
+                padding: 5px;
+                font-size: 12px;
+                white-space: nowrap;
+                cursor: pointer;}
+                .pair-results .pair.horizontal {background-color: darkorange}
+                .pair-results .pair.horizontal:hover,
+                .pair-results .pair.horizontal.hover {background-color: #ffaf4d}
 
-/*#x_481, #x_641 {background-color: aquamarine;}*/
+                .pair-results .pair.vertical {background-color: mediumseagreen}
+                .pair-results .pair.vertical:hover,
+                .pair-results .pair.vertical.hover {background-color: #6ecf99}
 
+.sqmeter.point.pair_highlight.horizontal {background-color: #ffaf4d}
+.sqmeter.point.pair_highlight.vertical {background-color: #6ecf99}
 
+#matrix-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 5px;
+    overflow: hidden;
+    border-top: 1px solid rgba(0,0,0,0.1);
+    background-color: ghostwhite;}
+    .matrices {
+        display: inline-block;
+        padding: 20px;
+        font-family: "Open Sans";
+        overflow: scroll;
+        border: 1px solid rgba(0,0,0,0.2);
+        background-color: rgba(0,0,0,0.1);}
+            .matrix, .fake-matrix {position: relative; margin: 20px;}
+            .matrix.hide {display: none;}
+            .fake-matrix.hide {display: none;}
+                .matrix:before,
+                .fake-matrix:before {
+                    content: "";
+                    position: absolute;
+                    top: -5px;
+                    left: -7px;
+                    height: 100%;
+                    padding: 3px;
+                    border-left: 2px solid rgba(0,0,0,0.8);
+                    border-top: 2px solid rgba(0,0,0,0.8);
+                    border-bottom: 2px solid rgba(0,0,0,0.8);}
+                .matrix:after,
+                .fake-matrix:after {
+                    content: "";
+                    position: absolute;
+                    top: -5px;
+                    left: 100%;
+                    height: 100%;
+                    padding: 3px;
+                    border-right: 2px solid rgba(0,0,0,0.8);
+                    border-top: 2px solid rgba(0,0,0,0.8);
+                    border-bottom: 2px solid rgba(0,0,0,0.8);}
+
+                    .matrix span, .fake-matrix span {
+                        display: flex;
+                        justify-content: center;
+                        min-width: 34px;
+                        margin: 2px;
+                        padding: 2px;
+                        cursor: pointer;
+                        font-family: "Open Sans";
+                        font-size: 12px;}
+
+                        .matrix .horiz {background-color: darkorange}
+                        .matrix .horiz:hover,
+                        .matrix .horiz.hover {background-color: #ffaf4d !important}
+                        .matrix .vert {background-color: mediumseagreen}
+                        .matrix .vert:hover,
+                        .matrix .vert.hover {background-color: #6ecf99 !important}
 
 .point.sqmeter.cyan {background-color: cyan !important;}
 .point.sqmeter.lime {background-color: lime !important;}
+.overlay {
+    height: 100%;
+    width: 100%;
+    background-color: rgba(0,200,0,0.5);}
