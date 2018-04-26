@@ -68,7 +68,8 @@ input, button, submit {border: none;}
         background-clip: padding-box;
         transition: background-color .1s ease;}
         #actions-container button:hover {background-color: #03A9F4;}
-        #actions-container button:focus {outline: 3px solid cornflowerblue}
+        #actions-container button:active {background-color: #007fb9;}
+        #actions-container button:focus {outline: none}
 
 /*#x_481, #x_641 {background-color: aquamarine;}*/
 
